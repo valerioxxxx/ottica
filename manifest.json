@@ -1,0 +1,17 @@
+{
+  "name": "LaPineta – Rubrica Clienti",
+  "short_name": "LaPineta",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#e8f9ec",
+  "theme_color": "#15803d",
+  "lang": "it",
+  "icons": [
+    {
+      "src": "icona.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

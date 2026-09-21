@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#15803d">
+<title>LaPineta – Rubrica Clienti</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  :root {
+    --blu: #1d4ed8;
+    --blu-scuro: #1e3a8a;
+    --verde: #15803d;
+    --rosso: #b91c1c;
+    --grigio: #4b5563;
+    --sfondo: #f3f4f6;
+    --bianco: #ffffff;
+    --bordo: #9ca3af;
+    --testo: #111827;
+    --celeste: #eff6ff;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: 22px; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Arial, Helvetica, sans-serif;
+    background: var(--sfondo);
+    color: var(--testo);
+    line-height: 1.4;
+  }
+  header {
+    background: linear-gradient(135deg, #ffffff 0%, #e8f9ec 55%, #b9f0c4 100%);
+    border-bottom: 4px solid #22c55e;
+    padding: 0.5rem 1rem 0.3rem; text-align: center;
+  }
+  header .logo { display: block; margin: 0 auto; width: min(420px, 80vw); height: auto; }
+  header img.logo { max-height: 110px; width: auto; }
+  header h1 { margin: 0; font-size: 1rem; font-weight: normal; color: var(--grigio); letter-spacing: 0.1em; text-transform: uppercase; }
+  main { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+  .nascosto { display: none !important; }
+
+  /* Pulsanti */
+  button {
+    font: inherit; font-size: 1.1rem; font-weight: bold;
+    min-height: 3.2rem; padding: 0.6rem 1.2rem;
+    border: 3px solid transparent; border-radius: 12px; cursor: pointer;
+    color: var(--bianco); background: var(--blu);
+  }
+  button:hover { filter: brightness(1.1); }
+  button:focus-visible { outline: 5px solid #f59e0b; outline-offset: 2px; }
+  button.verde { background: var(--verde); }
+  button.rosso { background: var(--rosso); }
+  button.grigio { background: var(--bianco); color: var(--testo); border-color: var(--bordo); }
+  button.largo { width: 100%; font-size: 1.3rem; min-height: 4rem; }
+  .barra { display: flex; gap: 0.8rem; flex-wrap: wrap; margin: 1rem 0; }
+  .barra > * { flex: 1 1 200px; }
+
+  /* Campi */
+  input, select, textarea {
+    font: inherit; font-size: 1.2rem; width: 100%;
+    padding: 0.6rem 0.8rem; border: 3px solid var(--bordo); border-radius: 12px;
+    background: var(--bianco); color: var(--testo);
+  }
+  input:focus, select:focus, textarea:focus { outline: 5px solid #f59e0b; border-color: var(--blu); }
+  #ricerca { font-size: 1.4rem; min-height: 4rem; }
+  label { display: block; font-weight: bold; margin: 0.9rem 0 0.3rem; }
+  label small { font-weight: normal; color: var(--grigio); }
+  textarea { min-height: 5rem; resize: vertical; }
+  .spunta { display: flex; align-items: center; gap: 0.6rem; margin-top: 1rem; font-weight: bold; }
+  .spunta input { width: 1.6rem; height: 1.6rem; margin: 0; }
+
+  /* Griglie di campi piccoli (sfera, cilindro, ...) */
+  .griglia { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.4rem, 1fr)); gap: 0.5rem 0.6rem; }
+  .griglia label { margin: 0 0 0.15rem; font-size: 0.95rem; }
+  .griglia input { font-size: 1.15rem; padding: 0.45rem 0.6rem; }
+  .gruppo { margin-top: 0.8rem; }
+  .gruppo h3, .occhio h3 { margin: 0 0 0.4rem; font-size: 1.15rem; color: var(--blu-scuro); }
+  .occhi { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+  .occhio { border: 3px solid var(--blu); border-radius: 14px; padding: 0.8rem 1rem; background: var(--celeste); }
+  .occhio h3 { font-size: 1.3rem; text-align: center; }
+  .due-colonne { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .tre-colonne { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  @media (max-width: 700px) {
+    .due-colonne, .tre-colonne, .occhi { grid-template-columns: 1fr; }
+    html { font-size: 20px; }
+  }
+
+  /* Voci di lista (clienti e visite) */
+  .voce {
+    display: block; width: 100%; text-align: left;
+    background: var(--bianco); color: var(--testo);
+    border: 3px solid var(--bordo); border-radius: 14px;
+    padding: 1rem 1.2rem; margin-bottom: 0.8rem;
+    font-size: 1.4rem; font-weight: bold; line-height: 1.3;
+  }
+  .voce:hover { border-color: var(--blu); background: var(--celeste); filter: none; }
+  .voce small { display: block; font-size: 1rem; font-weight: normal; color: var(--grigio); margin-top: 0.3rem; white-space: pre-line; }
+  .voce.visita { font-size: 1.2rem; }
+  .voce.visita .data { color: var(--blu-scuro); }
+  .voce.visita .valori { display: block; font-size: 1.05rem; font-weight: normal; margin-top: 0.3rem; white-space: pre-line; }
+  .vuoto { text-align: center; color: var(--grigio); padding: 1.5rem 1rem; font-size: 1.2rem; }
+
+  /* Riquadri sempre aperti */
+  .scheda { background: var(--bianco); border: 3px solid var(--bordo); border-radius: 14px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+  .scheda h2 { margin: 0 0 0.5rem; color: var(--blu-scuro); font-size: 1.4rem; border-bottom: 3px solid var(--blu); padding-bottom: 0.3rem; }
+
+  /* Riquadri chiudibili (dati usati meno spesso) */
+  details { background: var(--bianco); border: 3px solid var(--bordo); border-radius: 14px; margin-bottom: 1rem; }
+  summary { list-style: none; cursor: pointer; padding: 0.8rem 1.2rem; font-size: 1.3rem; font-weight: bold; color: var(--blu-scuro); }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: '▶  '; font-size: 1rem; }
+  details[open] summary::before { content: '▼  '; }
+  summary:hover { background: var(--celeste); border-radius: 10px; }
+  summary .pieno { float: right; font-size: 0.9rem; color: var(--verde); font-weight: normal; }
+  details .contenuto { padding: 0 1.2rem 1rem; }
+  .info { color: var(--grigio); font-size: 1rem; text-align: center; margin: 0.5rem 0; }
+  .titolo-cliente { font-size: 1.5rem; font-weight: bold; text-align: center; margin: 0 0 0.5rem; color: var(--blu-scuro); }
+
+  /* Messaggio di conferma */
+  #avviso {
+    position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%);
+    background: var(--verde); color: var(--bianco);
+    padding: 0.8rem 1.5rem; border-radius: 12px; font-size: 1.3rem; font-weight: bold;
+    width: max-content; max-width: 92vw; text-align: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,.3); z-index: 10;
+  }
+  #avviso.errore { background: var(--rosso); }
+
+  /* Finestra di conferma */
+  dialog { border: 4px solid var(--rosso); border-radius: 16px; padding: 1.5rem; max-width: 90vw; width: 520px; font-size: 1.2rem; }
+  dialog::backdrop { background: rgba(0,0,0,.5); }
+  dialog p { margin: 0 0 1rem; }
+
+  /* Stampa */
+  @media print {
+    .barra, .no-stampa, .info { display: none !important; }
+    header { background: none; border-bottom: 2px solid #000; padding: 0; }
+    header .logo { width: 200px; }
+    html { font-size: 13px; }
+    body { background: var(--bianco); }
+    .scheda, .voce, details { border: 1px solid #000; page-break-inside: avoid; }
+    input, select, textarea { border: 1px solid #000; }
+    summary::before { content: ''; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <!-- Se nella cartella c'è un file logo.png viene mostrato quello; altrimenti la scritta qui sotto -->
+  <img class="logo nascosto" src="logo.png" alt="LaPineta" onload="this.classList.remove('nascosto'); this.nextElementSibling.classList.add('nascosto')">
+  <svg class="logo" viewBox="0 0 440 96" role="img" aria-label="LaPineta">
+    <defs>
+      <linearGradient id="verde-lucido" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#d9fbe0"/>
+        <stop offset="0.42" stop-color="#4ade80"/>
+        <stop offset="0.5" stop-color="#15803d"/>
+        <stop offset="1" stop-color="#14532d"/>
+      </linearGradient>
+      <linearGradient id="riflesso" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffffff" stop-opacity="0.85"/>
+        <stop offset="0.45" stop-color="#ffffff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <text x="222" y="72" text-anchor="middle" font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+          font-weight="900" font-style="italic" font-size="74" letter-spacing="-1"
+          fill="url(#verde-lucido)" stroke="#0b3d1e" stroke-width="3" paint-order="stroke" stroke-linejoin="round">LaPineta</text>
+    <text x="222" y="72" text-anchor="middle" font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+          font-weight="900" font-style="italic" font-size="74" letter-spacing="-1"
+          fill="url(#riflesso)">LaPineta</text>
+  </svg>
+  <h1>Rubrica Clienti</h1>
+</header>
+
+<main>
+
+  <!-- ===================== 1. LISTA CLIENTI ===================== -->
+  <section id="vista-lista">
+    <label for="ricerca">🔍 Cerca un cliente <small>(scrivi il nome, il cognome o il telefono)</small></label>
+    <input id="ricerca" type="search" placeholder="Es. Rossi" autocomplete="off">
+
+    <div class="barra">
+      <button class="verde largo" id="btn-nuovo">➕ NUOVO CLIENTE</button>
+    </div>
+
+    <div id="lista"></div>
+    <p class="info" id="contatore"></p>
+
+    <div class="barra">
+      <button class="grigio" id="btn-backup">💾 Salva copia di sicurezza</button>
+      <button class="grigio" id="btn-ripristina">📂 Ripristina da copia</button>
+      <input type="file" id="file-ripristino" accept=".json,application/json" class="nascosto">
+    </div>
+    <p class="info">I dati sono salvati su questo computer. Fai una copia di sicurezza ogni tanto.</p>
+  </section>
+
+  <!-- ===================== 2. SCHEDA CLIENTE ===================== -->
+  <section id="vista-cliente" class="nascosto">
+    <div class="barra no-stampa">
+      <button class="grigio" id="btn-cliente-indietro">⬅ Torna alla lista</button>
+      <button class="verde" id="btn-cliente-salva">✔ SALVA</button>
+    </div>
+
+    <form id="form-cliente" autocomplete="off">
+      <div class="scheda">
+        <h2>👤 Cliente</h2>
+        <div class="due-colonne">
+          <div><label for="nome">Nome</label><input id="nome" data-cliente="nome"></div>
+          <div><label for="cognome">Cognome</label><input id="cognome" data-cliente="cognome"></div>
+        </div>
+        <div class="due-colonne">
+          <div><label for="telefono">Telefono <small>(facoltativo)</small></label><input id="telefono" type="tel" data-cliente="telefono"></div>
+          <div><label for="nascita">Data di nascita <small>(facoltativa)</small></label><input id="nascita" type="date" data-cliente="nascita"></div>
+        </div>
+        <p class="info" id="prima-visita" style="text-align:left"></p>
+      </div>
+
+      <details id="det-anagrafica">
+        <summary>Altri dati anagrafici</summary>
+        <div class="contenuto">
+          <label for="codice-fiscale">Codice fiscale</label><input id="codice-fiscale" data-cliente="codiceFiscale" style="text-transform:uppercase">
+          <label for="indirizzo">Indirizzo</label><input id="indirizzo" data-cliente="indirizzo">
+          <label for="email">E-mail</label><input id="email" type="email" data-cliente="email">
+        </div>
+      </details>
+
+      <details id="det-anamnesi">
+        <summary>Anamnesi <small style="font-weight:normal;color:var(--grigio)">(storia clinica, patologie, farmaci)</small></summary>
+        <div class="contenuto">
+          <textarea id="anamnesi" data-cliente="anamnesi" placeholder="es. diabete, familiarità glaucoma, intervento cataratta 2019"></textarea>
+        </div>
+      </details>
+
+      <div class="scheda">
+        <h2>📝 Note generali sul cliente</h2>
+        <textarea id="note-cliente" data-cliente="note" placeholder="es. allergico al nichel, preferisce montature leggere"></textarea>
+      </div>
+    </form>
+
+    <div class="scheda">
+      <h2>📅 Storico visite</h2>
+      <div class="barra no-stampa" style="margin-top:0.5rem">
+        <button class="verde largo" id="btn-nuova-visita">➕ NUOVA VISITA</button>
+      </div>
+      <div id="lista-visite"></div>
+    </div>
+
+    <div class="barra no-stampa">
+      <button type="button" class="grigio" id="btn-cliente-stampa">🖨 Stampa tutto</button>
+      <button type="button" class="rosso" id="btn-cliente-elimina">🗑 Elimina cliente</button>
+    </div>
+  </section>
+
+  <!-- ===================== 3. VISITA ===================== -->
+  <section id="vista-visita" class="nascosto">
+    <div class="barra no-stampa">
+      <button class="grigio" id="btn-visita-indietro">⬅ Torna al cliente</button>
+      <button class="verde" id="btn-visita-salva-alto">✔ SALVA VISITA</button>
+    </div>
+
+    <p class="titolo-cliente" id="visita-titolo"></p>
+
+    <form id="form-visita" autocomplete="off">
+      <div class="scheda">
+        <h2>📅 Date</h2>
+        <div class="tre-colonne">
+          <div><label for="data">Data visita</label><input id="data" type="date" data-campo="data"></div>
+          <div><label for="data-prescrizione">Data prescrizione</label><input id="data-prescrizione" type="date" data-campo="dataPrescrizione"></div>
+          <div><label for="data-controllo">Prossimo controllo</label><input id="data-controllo" type="date" data-campo="dataProxControllo"></div>
+        </div>
+        <div class="barra no-stampa" id="riga-copia-ultima" style="margin-bottom:0">
+          <button type="button" class="grigio" id="btn-copia-ultima">📋 Copia i valori dall'ultima visita</button>
+        </div>
+      </div>
+
+      <div class="scheda">
+        <h2>👓 Gradazione PER LONTANO</h2>
+        <div class="occhi" id="rx-lontano"></div>
+        <div class="barra no-stampa" style="margin-bottom:0">
+          <button type="button" class="grigio" id="btn-copia-od">Copia DESTRO → SINISTRO</button>
+          <label class="spunta" style="flex:0 1 auto;margin:0"><input type="checkbox" data-campo="tabo" checked> Schema TABO</label>
+        </div>
+      </div>
+
+      <details id="det-vicino">
+        <summary>Gradazione PER VICINO</summary>
+        <div class="contenuto"><div class="occhi" id="rx-vicino"></div></div>
+      </details>
+
+      <details id="det-medio">
+        <summary>Gradazione MEDIA DISTANZA</summary>
+        <div class="contenuto"><div class="occhi" id="rx-medio"></div></div>
+      </details>
+
+      <details id="det-dip">
+        <summary>Distanza interpupillare (mm)</summary>
+        <div class="contenuto"><div class="tre-colonne" id="dip"></div></div>
+      </details>
+
+      <div class="scheda">
+        <h2>🕶 Lenti e montatura</h2>
+        <div class="due-colonne">
+          <div><label for="lente-od">Tipo di lente OCCHIO DESTRO</label><input id="lente-od" data-campo="lente.od" placeholder="es. monofocale antiriflesso"></div>
+          <div><label for="lente-os">Tipo di lente OCCHIO SINISTRO</label><input id="lente-os" data-campo="lente.os" placeholder="es. monofocale antiriflesso"></div>
+        </div>
+        <div class="barra no-stampa" style="margin:0.5rem 0 0">
+          <button type="button" class="grigio" id="btn-copia-lente" style="flex:0 1 auto">Stessa lente per i due occhi</button>
+        </div>
+        <label for="montatura">Tipo di montatura</label>
+        <input id="montatura" data-campo="montatura" placeholder="es. metallo, Ray-Ban 52-18">
+        <label for="prezzo">Prezzo in € <small>(facoltativo)</small></label>
+        <input id="prezzo" data-campo="prezzo" placeholder="es. 150">
+      </div>
+
+      <details id="det-lac">
+        <summary>Lenti a contatto (L.A.C.)</summary>
+        <div class="contenuto">
+          <div class="occhi" id="lac"></div>
+          <label for="lac-note">Note sulle lenti a contatto</label>
+          <textarea id="lac-note" data-campo="lac.note" placeholder="es. uso giornaliero, soluzione consigliata"></textarea>
+        </div>
+      </details>
+
+      <div class="scheda">
+        <h2>📝 Note della visita</h2>
+        <textarea id="note-visita" data-campo="note" placeholder="Scrivi qui qualsiasi annotazione"></textarea>
+        <p class="info" id="aggiornato"></p>
+      </div>
+
+      <div class="barra no-stampa">
+        <button type="submit" class="verde largo">✔ SALVA VISITA</button>
+      </div>
+      <div class="barra no-stampa">
+        <button type="button" class="grigio" id="btn-visita-stampa">🖨 Stampa</button>
+        <button type="button" class="rosso" id="btn-visita-elimina">🗑 Elimina questa visita</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<div id="avviso" class="nascosto"></div>
+
+<dialog id="dialogo">
+  <p id="dialogo-testo"></p>
+  <div class="barra">
+    <button class="grigio" id="dialogo-no">No, annulla</button>
+    <button class="rosso" id="dialogo-si">Sì, confermo</button>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  'use strict';
+  const CHIAVE = 'rubrica_ottico_v1';
+  const $ = (id) => document.getElementById(id);
+
+  // ================= Costruzione dei riquadri ripetitivi =================
+  // Ogni campo ha un attributo data-campo="percorso.nel.dato" (es. rx.lontano.od.sfera):
+  // lettura e scrittura del modulo sono automatiche, senza elencare i campi uno per uno.
+  const CAMPI_RX = [['sfera', 'Sfera', '-1,50'], ['cil', 'Cilindro', '-0,75'], ['asse', 'Asse', '90'],
+                    ['add', 'Add.', '+2,00'], ['prisma', 'Prisma', ''], ['base', 'Base', ''], ['visus', 'Visus', '10/10']];
+  const CAMPI_LAC = [['tipo', 'Marca / tipo', ''], ['potere', 'Potere', ''], ['raggio', 'Raggio base', ''], ['diametro', 'Diametro', '']];
+
+  function campo(path, etichetta, ph, extra) {
+    const id = 'c-' + path.replace(/\./g, '-');
+    return '<div><label for="' + id + '">' + etichetta + '</label><input id="' + id + '" data-campo="' + path + '" placeholder="' + ph + '"' + (extra || '') + '></div>';
+  }
+  function griglia(prefix, campi) {
+    return '<div class="griglia">' + campi.map(([k, e, ph]) => campo(prefix + '.' + k, e, ph)).join('') + '</div>';
+  }
+  function occhi(prefix, campi) {
+    return '<div class="occhio"><h3>Occhio DESTRO (OD)</h3>' + griglia(prefix + '.od', campi) + '</div>' +
+           '<div class="occhio"><h3>Occhio SINISTRO (OS)</h3>' + griglia(prefix + '.os', campi) + '</div>';
+  }
+  $('rx-lontano').innerHTML = occhi('rx.lontano', CAMPI_RX);
+  $('rx-vicino').innerHTML = occhi('rx.vicino', CAMPI_RX);
+  $('rx-medio').innerHTML = occhi('rx.medio', CAMPI_RX);
+  $('lac').innerHTML = occhi('lac', CAMPI_LAC);
+  $('dip').innerHTML = [['lontano', 'Lontano'], ['vicino', 'Vicino'], ['medio', 'Media distanza']].map(([k, e]) =>
+    '<div class="gruppo"><h3>' + e + '</h3><div class="griglia">' + campo('dip.' + k + '.od', 'OD', '63') + campo('dip.' + k + '.os', 'OS', '63') + '</div></div>').join('');
+
+  // ================= Dati =================
+  // cliente = { id, nome, cognome, telefono, nascita, codiceFiscale, indirizzo, email, anamnesi, note, visite: [visita] }
+  // visita  = { id, data, dataPrescrizione, dataProxControllo, tabo, rx:{lontano|vicino|medio:{od,os}}, dip, lente:{od,os},
+  //             montatura, prezzo, lac, note, aggiornato }
+  let clienti = normalizza(carica());
+  let idCliente = null;
+  let idVisita = null;
+
+  function carica() {
+    try {
+      const dati = JSON.parse(localStorage.getItem(CHIAVE) || '[]');
+      return Array.isArray(dati) ? dati : [];
+    } catch (e) { return []; }
+  }
+  function salvaTutto() {
+    try {
+      localStorage.setItem(CHIAVE, JSON.stringify(clienti));
+      return true;
+    } catch (e) {
+      avviso('Errore: impossibile salvare. Spazio esaurito?', true);
+      return false;
+    }
+  }
+  function nuovoId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function oggi() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  // lettura/scrittura per percorso ("rx.lontano.od.sfera")
+  function leggi(obj, path) { return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj); }
+  function scrivi(obj, path, val) {
+    const k = path.split('.');
+    let o = obj;
+    for (let i = 0; i < k.length - 1; i++) {
+      if (!o[k[i]] || typeof o[k[i]] !== 'object') o[k[i]] = {};
+      o = o[k[i]];
+    }
+    o[k[k.length - 1]] = val;
+  }
+  function vuoto(v) { return v == null || v === '' || v === false || (typeof v === 'object' && Object.values(v).every(vuoto)); }
+
+  // Sistema i dati caricati e converte i formati delle versioni precedenti.
+  function normalizza(lista) {
+    for (const c of lista) {
+      c.id = c.id || nuovoId();
+      for (const k of ['nome', 'cognome', 'telefono', 'nascita', 'codiceFiscale', 'indirizzo', 'email', 'anamnesi']) c[k] = c[k] || '';
+      if (!Array.isArray(c.visite)) {
+        // versione 1: una sola scheda senza storico
+        c.visite = [];
+        const vecchia = { od: c.od, os: c.os, montatura: c.montatura, prezzo: c.prezzo, note: c.note, aggiornato: c.aggiornato };
+        if (!vuoto({ od: vecchia.od, os: vecchia.os, montatura: vecchia.montatura, prezzo: vecchia.prezzo, note: vecchia.note })) {
+          c.visite.push({ id: nuovoId(), data: (c.aggiornato || '').slice(0, 10) || oggi(), ...vecchia });
+        }
+        delete c.od; delete c.os; delete c.montatura; delete c.prezzo; delete c.aggiornato;
+        c.note = '';
+      }
+      c.note = c.note || '';
+      for (const v of c.visite) {
+        v.id = v.id || nuovoId();
+        v.data = v.data || oggi();
+        if (!v.rx) {
+          // versione 2: gradazione solo per lontano in od/os
+          const od = v.od || {}, os = v.os || {};
+          v.rx = { lontano: { od: { sfera: od.sfera || '', cil: od.cilindro || '', asse: od.asse || '' },
+                              os: { sfera: os.sfera || '', cil: os.cilindro || '', asse: os.asse || '' } } };
+          v.lente = { od: od.lente || '', os: os.lente || '' };
+          delete v.od; delete v.os;
+        }
+        if (v.tabo == null) v.tabo = true;
+        delete v.test; delete v.autoref; // riquadri rimossi
+        if (v.prezzo != null && typeof v.prezzo !== 'string') v.prezzo = String(v.prezzo);
+      }
+      ordinaVisite(c);
+    }
+    ordinaClienti(lista);
+    return lista;
+  }
+  function ordinaClienti(lista) {
+    lista.sort((a, b) =>
+      (a.cognome + ' ' + a.nome).localeCompare(b.cognome + ' ' + b.nome, 'it', { sensitivity: 'base' }));
+  }
+  function ordinaVisite(c) {
+    c.visite.sort((a, b) => (b.data || '').localeCompare(a.data || '') || (b.aggiornato || '').localeCompare(a.aggiornato || ''));
+  }
+  const clienteAperto = () => clienti.find((c) => c.id === idCliente);
+
+  // ================= Avvisi =================
+  let timerAvviso;
+  function avviso(testo, errore) {
+    const el = $('avviso');
+    el.textContent = testo;
+    el.classList.toggle('errore', !!errore);
+    el.classList.remove('nascosto');
+    clearTimeout(timerAvviso);
+    timerAvviso = setTimeout(() => el.classList.add('nascosto'), 3500);
+  }
+  function conferma(testo) {
+    return new Promise((resolve) => {
+      const d = $('dialogo');
+      $('dialogo-testo').textContent = testo;
+      const chiudi = (ris) => { d.close(); resolve(ris); };
+      $('dialogo-si').onclick = () => chiudi(true);
+      $('dialogo-no').onclick = () => chiudi(false);
+      d.oncancel = (e) => { e.preventDefault(); chiudi(false); };
+      d.showModal();
+      $('dialogo-no').focus();
+    });
+  }
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, (ch) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  }
+  function dataLeggibile(aaaammgg) {
+    if (!aaaammgg) return '';
+    const [a, m, g] = aaaammgg.split('-').map(Number);
+    try { return new Date(a, m - 1, g).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }); }
+    catch (e) { return aaaammgg; }
+  }
+  function dataOraLeggibile(iso) {
+    try { return new Date(iso).toLocaleString('it-IT', { dateStyle: 'long', timeStyle: 'short' }); }
+    catch (e) { return ''; }
+  }
+
+  // ================= Moduli generici (data-campo / data-cliente) =================
+  function moduloVersoOggetto(form, attr) {
+    const o = {};
+    for (const el of form.querySelectorAll('[' + attr + ']')) {
+      scrivi(o, el.getAttribute(attr), el.type === 'checkbox' ? el.checked : el.value.trim());
+    }
+    return o;
+  }
+  function oggettoVersoModulo(form, attr, dati) {
+    for (const el of form.querySelectorAll('[' + attr + ']')) {
+      const v = leggi(dati, el.getAttribute(attr));
+      if (el.type === 'checkbox') el.checked = v == null ? true : !!v;
+      else el.value = v == null ? '' : String(v);
+    }
+  }
+  // apre i riquadri chiudibili che contengono dati, chiude gli altri
+  function apriRiquadriPieni(form) {
+    for (const d of form.querySelectorAll('details')) {
+      const pieno = [...d.querySelectorAll('input:not([type=checkbox]), textarea')].some((i) => i.value.trim() !== '');
+      d.open = pieno;
+      let badge = d.querySelector('summary .pieno');
+      if (pieno && !badge) { badge = document.createElement('span'); badge.className = 'pieno'; badge.textContent = '✔ compilato'; d.querySelector('summary').appendChild(badge); }
+      if (!pieno && badge) badge.remove();
+    }
+  }
+  // stampa con tutti i riquadri aperti, poi li richiude com'erano
+  function stampa(form) {
+    const chiusi = [...form.querySelectorAll('details:not([open])')];
+    chiusi.forEach((d) => { d.open = true; });
+    window.addEventListener('afterprint', () => chiusi.forEach((d) => { d.open = false; }), { once: true });
+    window.print();
+  }
+
+  // ================= Riassunti =================
+  function riassuntoOcchio(o) {
+    o = o || {};
+    const p = [];
+    if (o.sfera) p.push('sf ' + o.sfera);
+    if (o.cil) p.push('cil ' + o.cil);
+    if (o.asse) p.push('asse ' + o.asse);
+    if (o.add) p.push('add ' + o.add);
+    if (o.prisma) p.push('pr ' + o.prisma + (o.base ? '/' + o.base : ''));
+    if (o.visus) p.push('visus ' + o.visus);
+    return p.length ? p.join('  ') : '—';
+  }
+  function riassuntoVisita(v) {
+    const righe = [];
+    const rx = v.rx || {};
+    righe.push('LONTANO   OD: ' + riassuntoOcchio(rx.lontano && rx.lontano.od) + '     OS: ' + riassuntoOcchio(rx.lontano && rx.lontano.os));
+    if (!vuoto(rx.vicino)) righe.push('VICINO   OD: ' + riassuntoOcchio(rx.vicino.od) + '     OS: ' + riassuntoOcchio(rx.vicino.os));
+    if (!vuoto(rx.medio)) righe.push('MEDIA   OD: ' + riassuntoOcchio(rx.medio.od) + '     OS: ' + riassuntoOcchio(rx.medio.os));
+    const extra = [];
+    const l = v.lente || {};
+    const lenti = [l.od, l.os].filter(Boolean);
+    if (lenti.length) extra.push('👓 ' + (lenti[0] === lenti[1] || lenti.length === 1 ? lenti[0] : lenti.join(' / ')));
+    if (v.montatura) extra.push('🕶 ' + v.montatura);
+    if (v.prezzo) extra.push('💶 ' + v.prezzo + ' €');
+    if (!vuoto(v.lac)) extra.push('👁 lenti a contatto' + (v.lac.od && v.lac.od.tipo ? ': ' + v.lac.od.tipo : ''));
+    if (extra.length) righe.push(extra.join('   ·   '));
+    if (v.dataProxControllo) righe.push('🔔 prossimo controllo: ' + dataLeggibile(v.dataProxControllo));
+    if (v.note) righe.push('📝 ' + v.note);
+    return righe.join('\n');
+  }
+
+  // ================= Cambio vista =================
+  function mostra(nome) {
+    for (const v of ['lista', 'cliente', 'visita']) $('vista-' + v).classList.toggle('nascosto', v !== nome);
+    window.scrollTo(0, 0);
+  }
+
+  // ===== 1. Lista clienti =====
+  function mostraLista() {
+    idCliente = null; idVisita = null;
+    disegnaLista();
+    mostra('lista');
+  }
+  function disegnaLista() {
+    const filtro = $('ricerca').value.trim().toLowerCase();
+    const lista = $('lista');
+    lista.innerHTML = '';
+    const visibili = clienti.filter((c) =>
+      !filtro || (c.nome + ' ' + c.cognome + ' ' + c.cognome + ' ' + c.nome + ' ' + c.telefono).toLowerCase().includes(filtro));
+
+    if (clienti.length === 0) {
+      lista.innerHTML = '<p class="vuoto">Nessun cliente ancora.<br>Premi il pulsante verde <b>NUOVO CLIENTE</b> per iniziare.</p>';
+    } else if (visibili.length === 0) {
+      lista.innerHTML = '<p class="vuoto">Nessun cliente trovato con "<b>' + escapeHtml($('ricerca').value) + '</b>".</p>';
+    }
+    for (const c of visibili) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'voce';
+      const dett = [];
+      if (c.telefono) dett.push('☎ ' + c.telefono);
+      const ultima = c.visite[0];
+      dett.push(ultima ? '📅 ultima visita: ' + dataLeggibile(ultima.data) + (c.visite.length > 1 ? ' (' + c.visite.length + ' visite)' : '') : 'nessuna visita');
+      if (ultima && ultima.dataProxControllo) dett.push('🔔 controllo: ' + dataLeggibile(ultima.dataProxControllo));
+      b.innerHTML = escapeHtml(c.cognome) + ' ' + escapeHtml(c.nome) + '<small>' + escapeHtml(dett.join('   ·   ')) + '</small>';
+      b.onclick = () => mostraCliente(c.id);
+      lista.appendChild(b);
+    }
+    $('contatore').textContent = clienti.length
+      ? (filtro ? visibili.length + ' su ' : '') + clienti.length + ' clienti in rubrica'
+      : '';
+  }
+
+  // ===== 2. Scheda cliente =====
+  function mostraCliente(id) {
+    idCliente = id; idVisita = null;
+    const c = clienteAperto() || { visite: [] };
+    oggettoVersoModulo($('form-cliente'), 'data-cliente', c);
+    apriRiquadriPieni($('form-cliente'));
+    const prima = c.visite[c.visite.length - 1];
+    $('prima-visita').textContent = prima ? 'Prima visita: ' + dataLeggibile(prima.data) + '   ·   Visite registrate: ' + c.visite.length : '';
+    $('btn-cliente-elimina').classList.toggle('nascosto', !id);
+    $('btn-cliente-stampa').classList.toggle('nascosto', !id);
+    disegnaVisite(c);
+    mostra('cliente');
+    if (!id) $('nome').focus();
+  }
+  function disegnaVisite(c) {
+    const box = $('lista-visite');
+    box.innerHTML = '';
+    if (!c.visite.length) {
+      box.innerHTML = '<p class="vuoto">Nessuna visita registrata.<br>Premi <b>NUOVA VISITA</b> per aggiungere la prima.</p>';
+      return;
+    }
+    c.visite.forEach((v, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'voce visita';
+      b.innerHTML = '<span class="data">📅 ' + escapeHtml(dataLeggibile(v.data)) + (i === 0 ? ' — ultima' : '') + '</span>' +
+        '<span class="valori">' + escapeHtml(riassuntoVisita(v)) + '</span>';
+      b.onclick = () => mostraVisita(v.id);
+      box.appendChild(b);
+    });
+  }
+  function anagraficaModificata() {
+    const c = clienteAperto();
+    const f = moduloVersoOggetto($('form-cliente'), 'data-cliente');
+    if (!c) return Object.values(f).some(Boolean);
+    return Object.keys(f).some((k) => f[k] !== (c[k] || ''));
+  }
+  // Salva i dati del cliente. Ritorna false se manca il nome.
+  function salvaAnagrafica() {
+    const f = moduloVersoOggetto($('form-cliente'), 'data-cliente');
+    if (!f.nome && !f.cognome) {
+      avviso('Scrivi almeno il nome o il cognome', true);
+      $('nome').focus();
+      return false;
+    }
+    f.codiceFiscale = f.codiceFiscale.toUpperCase();
+    let c = clienteAperto();
+    if (!c) {
+      c = { id: nuovoId(), visite: [] };
+      clienti.push(c);
+      idCliente = c.id;
+    }
+    Object.assign(c, f);
+    ordinaClienti(clienti);
+    return salvaTutto();
+  }
+
+  // ===== 3. Visita =====
+  function mostraVisita(id) {
+    const c = clienteAperto();
+    idVisita = id;
+    const v = c.visite.find((x) => x.id === id) || { data: oggi(), tabo: true };
+    $('visita-titolo').textContent = '👤 ' + c.cognome + ' ' + c.nome;
+    oggettoVersoModulo($('form-visita'), 'data-campo', v);
+    apriRiquadriPieni($('form-visita'));
+    $('aggiornato').textContent = v.aggiornato ? 'Ultimo salvataggio: ' + dataOraLeggibile(v.aggiornato) : '';
+    $('btn-visita-elimina').classList.toggle('nascosto', !id);
+    $('btn-visita-stampa').classList.toggle('nascosto', !id);
+    $('riga-copia-ultima').classList.toggle('nascosto', !!id || !c.visite.length);
+    mostra('visita');
+    if (!id) $('c-rx-lontano-od-sfera').focus();
+  }
+  function salvaVisita() {
+    const c = clienteAperto();
+    const dati = moduloVersoOggetto($('form-visita'), 'data-campo');
+    dati.data = dati.data || oggi();
+    dati.aggiornato = new Date().toISOString();
+    const esistente = c.visite.find((x) => x.id === idVisita);
+    if (esistente) Object.assign(esistente, dati);
+    else c.visite.push({ id: nuovoId(), ...dati });
+    ordinaVisite(c);
+    if (salvaTutto()) {
+      avviso('✔ Visita del ' + dataLeggibile(dati.data) + ' salvata');
+      mostraCliente(c.id);
+    }
+  }
+  function copiaDaUltimaVisita() {
+    const c = clienteAperto();
+    const u = c.visite[0];
+    if (!u) return;
+    // copia tutto tranne date e note
+    const copia = JSON.parse(JSON.stringify(u));
+    for (const k of ['id', 'data', 'dataPrescrizione', 'dataProxControllo', 'note', 'aggiornato']) delete copia[k];
+    if (copia.lac) delete copia.lac.note;
+    const form = $('form-visita');
+    for (const el of form.querySelectorAll('[data-campo]')) {
+      const p = el.getAttribute('data-campo');
+      const v = leggi(copia, p);
+      if (v == null) continue;
+      if (el.type === 'checkbox') el.checked = !!v; else el.value = String(v);
+    }
+    apriRiquadriPieni(form);
+    avviso('Valori copiati dalla visita del ' + dataLeggibile(u.data));
+  }
+  function copiaOdInOs(prefix) {
+    for (const el of $('form-visita').querySelectorAll('[data-campo^="' + prefix + '.od."]')) {
+      const gemello = $('form-visita').querySelector('[data-campo="' + el.getAttribute('data-campo').replace('.od.', '.os.') + '"]');
+      if (gemello) gemello.value = el.value;
+    }
+  }
+
+  // ================= Backup / ripristino =================
+  function backup() {
+    const blob = new Blob([JSON.stringify(clienti, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'rubrica-clienti-' + oggi() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    avviso('✔ Copia di sicurezza scaricata');
+  }
+  async function ripristina(file) {
+    let dati;
+    try {
+      dati = JSON.parse(await file.text());
+      if (!Array.isArray(dati)) throw new Error();
+    } catch (e) {
+      avviso('Questo file non è una copia di sicurezza valida', true);
+      return;
+    }
+    const ok = await conferma('Vuoi sostituire la rubrica attuale (' + clienti.length + ' clienti) con quella del file (' + dati.length + ' clienti)?');
+    if (!ok) return;
+    clienti = normalizza(dati);
+    if (salvaTutto()) { avviso('✔ Rubrica ripristinata'); disegnaLista(); }
+  }
+
+  // ================= Eventi: lista =================
+  $('ricerca').addEventListener('input', disegnaLista);
+  $('btn-nuovo').onclick = () => mostraCliente(null);
+  $('btn-backup').onclick = backup;
+  $('btn-ripristina').onclick = () => $('file-ripristino').click();
+  $('file-ripristino').addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    if (f) ripristina(f);
+    e.target.value = '';
+  });
+
+  // ================= Eventi: cliente =================
+  $('btn-cliente-indietro').onclick = async () => {
+    if (anagraficaModificata() && !await conferma('Tornare alla lista SENZA salvare le modifiche al cliente?')) return;
+    mostraLista();
+  };
+  const salvaClienteEdEsci = () => {
+    if (salvaAnagrafica()) { avviso('✔ Salvato: ' + $('cognome').value.trim() + ' ' + $('nome').value.trim()); mostraLista(); }
+  };
+  $('btn-cliente-salva').onclick = salvaClienteEdEsci;
+  $('form-cliente').addEventListener('submit', (e) => { e.preventDefault(); salvaClienteEdEsci(); });
+  $('btn-nuova-visita').onclick = () => {
+    if (salvaAnagrafica()) mostraVisita(null);
+  };
+  $('btn-cliente-stampa').onclick = () => stampa($('form-cliente'));
+  $('btn-cliente-elimina').onclick = async () => {
+    const c = clienteAperto();
+    if (!c) return;
+    const n = c.visite.length;
+    if (!await conferma('Eliminare per sempre ' + c.cognome + ' ' + c.nome + (n ? ' e le sue ' + n + ' visite' : '') + '?')) return;
+    clienti = clienti.filter((x) => x.id !== c.id);
+    if (salvaTutto()) { avviso('Cliente eliminato'); mostraLista(); }
+  };
+
+  // ================= Eventi: visita =================
+  $('btn-visita-indietro').onclick = async () => {
+    if (!await conferma('Tornare al cliente SENZA salvare questa visita?')) return;
+    mostraCliente(idCliente);
+  };
+  $('btn-visita-salva-alto').onclick = salvaVisita;
+  $('form-visita').addEventListener('submit', (e) => { e.preventDefault(); salvaVisita(); });
+  $('btn-copia-ultima').onclick = copiaDaUltimaVisita;
+  $('btn-copia-od').onclick = () => { copiaOdInOs('rx.lontano'); avviso('Valori copiati nell\'occhio sinistro'); };
+  $('btn-copia-lente').onclick = () => { $('lente-os').value = $('lente-od').value; };
+  $('btn-visita-stampa').onclick = () => stampa($('form-visita'));
+  $('btn-visita-elimina').onclick = async () => {
+    const c = clienteAperto();
+    const v = c.visite.find((x) => x.id === idVisita);
+    if (!v) return;
+    if (!await conferma('Eliminare per sempre la visita del ' + dataLeggibile(v.data) + '?')) return;
+    c.visite = c.visite.filter((x) => x.id !== v.id);
+    if (salvaTutto()) { avviso('Visita eliminata'); mostraCliente(c.id); }
+  };
+
+  // Funziona anche senza internet dopo la prima apertura
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
+  salvaTutto(); // persiste l'eventuale conversione dai formati precedenti
+  mostraLista();
+})();
+</script>
+</body>
+</html>
